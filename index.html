@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Game Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="sparkles"></div>
+
+    <h1>💖 AI GAME HUB 💖</h1>
+    <p class="subtitle">3 trò chơi trí tuệ ứng dụng AI</p>
+
+    <div class="menu">
+
+        <!-- ♟️ CỜ VUA -->
+        <div class="card" onclick="goToGame('chess/index.html')">
+            <img src="images/chess.jpg" alt="Cờ vua">
+            <h2>♟️ Cờ vua AI</h2>
+            <p>Đấu trí với AI chiến thuật cao</p>
+            <div class="info">
+                <span>🧠 Minimax</span>
+                <span>♟️ Strategy</span>
+            </div>
+        </div>
+
+        <!-- ⚫⚪ CỜ VÂY -->
+        <div class="card" onclick="goToGame('/game-go-main/bmgp-main/bmgp.html')">
+            <img src="images/go.jpg" alt="Cờ vây">
+            <h2>⚫⚪ Cờ vây AI</h2>
+            <p>AI học từ dữ liệu và dự đoán nước đi</p>
+            <div class="info">
+                <span>🤖 Neural Network</span>
+                <span>📊 Training</span>
+            </div>
+        </div>
+
+        <!-- ❌⭕ TIC TAC TOE -->
+        <div class="card" onclick="goToGame('tic-tac-toe/index.html')">
+            <img src="images/tictactoe.jpg" alt="Tic Tac Toe">
+            <h2>❌⭕ Tic Tac Toe</h2>
+            <p>Game đơn giản nhưng AI không thể bị đánh bại</p>
+            <div class="info">
+                <span>🧠 Minimax</span>
+                <span>⚡ Fast</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const clickSound = new Audio('click.mp3');
+
+        function goToGame(path) {
+            clickSound.currentTime = 0;
+            clickSound.play();
+
+            document.body.classList.add("fade-out");
+
+            setTimeout(() => {
+                window.location.href = path;
+            }, 400);
+        }
+    </script>
+
+</body>
+</html>

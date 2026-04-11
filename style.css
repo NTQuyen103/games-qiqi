@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #fff0f5, #ffe4ec);
+    overflow: hidden;
+    color: #444;
+    transition: 0.4s;
+}
+
+.fade-out {
+    opacity: 0;
+}
+
+h1 {
+    margin-top: 50px;
+    font-size: 42px;
+    color: #ff4d88;
+    text-shadow: 0 0 10px rgba(255, 105, 180, 0.4);
+}
+
+.subtitle {
+    color: #777;
+    margin-bottom: 30px;
+}
+
+.menu {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.card {
+    width: 260px;
+    background: white;
+    border-radius: 20px;
+    padding: 15px;
+    cursor: pointer;
+
+    box-shadow: 0 0 20px rgba(255, 105, 180, 0.25);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 105, 180, 0.6);
+}
+
+.card img {
+    width: 100%;
+    border-radius: 15px;
+}
+
+.card h2 {
+    margin: 10px 0;
+    color: #ff4d88;
+}
+
+.card p {
+    font-size: 14px;
+    color: #666;
+}
+
+.info {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #999;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* sparkle */
+.sparkles {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-image: radial-gradient(#ffb6c1 2px, transparent 2px);
+    background-size: 60px 60px;
+    animation: sparkleMove 12s linear infinite;
+    opacity: 0.5;
+}
+
+@keyframes sparkleMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(60px); }
+}
