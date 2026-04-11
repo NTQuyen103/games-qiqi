@@ -22,6 +22,27 @@
   --shadow-board: 0 28px 68px rgba(39, 59, 98, 0.18);
 }
 
+#go-home {
+			position: fixed;
+			top: 20px;
+			left: 20px;
+			z-index: 9999;
+
+			width: 46px;
+			height: 46px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			border-radius: 12px;
+			border: 1px solid #ccc;
+			background: white;
+			font-size: 20px;
+			cursor: pointer;
+
+			box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+		}
+
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
