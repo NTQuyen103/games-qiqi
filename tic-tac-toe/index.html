@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="vi">
+<head>
+	<meta charset="utf-8">
+	<link rel="shortcut icon" href="favicon.ico">
+	<title>Tic - tac - toe AI</title>
+
+	<style>
+		/* Khai báo các biến màu và hiệu ứng dùng chung cho toàn bộ giao diện. */
+		:root {
+			--bg-1: #fff8ef;
+			--bg-2: #f4fbff;
+			--card: rgba(255, 255, 255, 0.9);
+			--text: #1f2937;
+			--muted: #6b7280;
+			--line: #dbe4f0;
+			--x-color: #ef4444;
+			--o-color: #0f766e;
+			--shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+		}
+
+		/* Đảm bảo các phần tử tính kích thước dễ kiểm soát hơn. */
+		* {
+			box-sizing: border-box;
+		}
+
+		/* Thiết lập nền tổng thể cho toàn bộ trang. */
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 24px;
+			font-family: "Segoe UI", Arial, sans-serif;
+			background:
+				radial-gradient(circle at top left, rgba(239, 68, 68, 0.14), transparent 28%),
+				radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.14), transparent 30%),
+				linear-gradient(135deg, var(--bg-1), var(--bg-2));
+			color: var(--text);
+		}
+
+		/* Khung chính chứa toàn bộ giao diện game. */
+		.game-shell {
+			position: relative;
+			width: min(92vw, 420px);
+			padding: 28px;
+			border: 1px solid rgba(255, 255, 255, 0.7);
+			border-radius: 28px;
+			background: var(--card);
+			box-shadow: var(--shadow);
+			backdrop-filter: blur(12px);
+		}
+
+		/* Thanh trên cùng: badge AI và nút reset. */
+		.game-topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 18px;
+		}
+
+		/* Nhãn nhỏ báo đây là chế độ chơi với AI. */
+		.game-badge {
+			display: inline-flex;
+			align-items: center;
+			padding: 6px 12px;
+			border-radius: 999px;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--o-color);
+			background: rgba(15, 118, 110, 0.1);
+		}
+
+		/* Tiêu đề chính của game. */
+		h1 {
+			margin: 0;
+			font-size: 34px;
+			line-height: 1.05;
+			letter-spacing: -0.04em;
+		}
+
+		/* Dòng mô tả ngắn bên dưới tiêu đề. */
+		.game-subtitle {
+			margin: 10px 0 0;
+			color: var(--muted);
+			font-size: 15px;
+			line-height: 1.5;
+		}
+
+		/* Khối chứa phần điều khiển, trạng thái và bàn cờ. */
+		.game-panel {
+			margin-top: 22px;
+			padding: 18px;
+			border: 1px solid var(--line);
+			border-radius: 22px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+		}
+
+		/* Nhãn phụ để đánh dấu từng nhóm nội dung như Game Status, Độ khó. */
+		.status-label {
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		/* Khối trạng thái hiển thị lượt chơi hoặc kết thúc ván. */
+		#game-status {
+			margin: 8px 0 18px;
+			padding: 14px 16px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: rgba(255, 255, 255, 0.9);
+			min-height: 88px;
+		}
+
+		/* Nhãn nhỏ bên trong box trạng thái, ví dụ: Đến lượt bạn, AI đang chơi. */
+		.status-chip {
+			display: inline-flex;
+			align-items: center;
+			padding: 5px 10px;
+			border-radius: 999px;
+			font-size: 11px;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--muted);
+			background: #eef2f7;
+		}
+
+		/* Tiêu đề chính trong box trạng thái. */
+		.status-title {
+			margin-top: 10px;
+			font-size: 20px;
+			font-weight: 800;
+			line-height: 1.2;
+			color: var(--text);
+		}
+
+		/* Phần mô tả chi tiết hơn trong box trạng thái. */
+		.status-text {
+			margin-top: 6px;
+			font-size: 14px;
+			line-height: 1.5;
+			color: var(--muted);
+		}
+
+		/* Giao diện trạng thái khi ván vẫn đang diễn ra. */
+		.status-playing {
+			border-color: #d9e3f0;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(243, 248, 255, 0.96));
+		}
+
+		.status-playing .status-chip {
+			color: #1d4ed8;
+			background: rgba(37, 99, 235, 0.1);
+		}
+
+		/* Khối chứa các control như ô chọn độ khó. */
+		.controls {
+			display: flex;
+			align-items: end;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 18px;
+		}
+
+		/* Nhóm control đơn lẻ, hiện tại đang dùng cho select độ khó. */
+		.control-group {
+			flex: 1;
+		}
+
+		/* Giao diện cho ô chọn độ khó. */
+		.control-select {
+			width: 100%;
+			margin-top: 6px;
+			padding: 10px 12px;
+			border: 1px solid var(--line);
+			border-radius: 12px;
+			background: #fff;
+			color: var(--text);
+			font: inherit;
+		}
+
+		/* Bảng thống kê gồm 3 ô: thắng, thua, hòa. */
+		.stats {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 10px;
+			margin-top: 16px;
+		}
+
+		/* Từng thẻ thống kê riêng lẻ. */
+		.stat-card {
+			padding: 10px 8px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: rgba(255, 255, 255, 0.8);
+			text-align: center;
+		}
+
+		/* Tên của từng loại thống kê. */
+		.stat-label {
+			display: block;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: var(--muted);
+		}
+
+		/* Giá trị số của thống kê. */
+		.stat-value {
+			display: block;
+			margin-top: 6px;
+			font-size: 22px;
+			font-weight: 800;
+		}
+
+		/* Màu riêng cho số trận thắng. */
+		.stat-win .stat-value {
+			color: var(--x-color);
+		}
+
+		/* Màu riêng cho số trận thua. */
+		.stat-loss .stat-value {
+			color: var(--o-color);
+		}
+
+		/* Màu riêng cho số trận hòa. */
+		.stat-draw .stat-value {
+			color: #2563eb;
+		}
+
+		/* Bàn cờ 3x3 dùng CSS Grid để chia thành 9 ô. */
+		.board {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 10px;
+		}
+
+		/* Giao diện cơ bản cho mỗi ô trong bàn cờ. */
+		.cell {
+			aspect-ratio: 1 / 1;
+			border: 1px solid var(--line);
+			border-radius: 18px;
+			background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96));
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+			font-size: clamp(40px, 10vw, 56px);
+			font-weight: 800;
+			cursor: pointer;
+			color: var(--text);
+			transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+		}
+
+		/* Hiệu ứng hover/focus khi ô còn được phép bấm. */
+		.cell:hover:not(:disabled),
+		.cell:focus-visible:not(:disabled) {
+			transform: translateY(-2px);
+			border-color: #c5d4e8;
+			box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+			outline: none;
+		}
+
+		/* Khi ô đã đánh rồi thì không còn con trỏ tay nữa. */
+		.cell:disabled {
+			cursor: default;
+		}
+
+		/* Màu riêng cho quân X. */
+		.cell-x {
+			color: var(--x-color);
+		}
+
+		/* Màu riêng cho quân O. */
+		.cell-o {
+			color: var(--o-color);
+		}
+
+		/* Nút reset game ở góc trên bên phải. */
+		#reset-game {
+			width: 46px;
+			height: 46px;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			border: 1px solid var(--line);
+			border-radius: 14px;
+			cursor: pointer;
+			background: #ffffff;
+			color: var(--text);
+			box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+			transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+		}
+
+		/* Hiệu ứng hover/focus cho nút reset. */
+		#reset-game:hover,
+		#reset-game:focus-visible {
+			transform: translateY(-1px) rotate(-12deg);
+			border-color: rgba(239, 68, 68, 0.35);
+			box-shadow: 0 14px 28px rgba(239, 68, 68, 0.16);
+			outline: none;
+		}
+
+		/* Kích thước icon SVG bên trong nút reset. */
+		#reset-game svg {
+			width: 22px;
+			height: 22px;
+		}
+
+		/* Lớp nền tối dùng để hiển thị popup kết quả. */
+		.result-modal {
+			position: absolute;
+			inset: 0;
+			display: none;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+			border-radius: 28px;
+			background: rgba(15, 23, 42, 0.28);
+			backdrop-filter: blur(4px);
+		}
+
+		/* Khi popup mở thì đổi sang display flex để hiện lên màn hình. */
+		.result-modal.is-open {
+			display: flex;
+		}
+
+		/* Khung chính của popup kết quả. */
+		.result-card {
+			position: relative;
+			width: min(100%, 320px);
+			padding: 20px 18px 18px;
+			border: 1px solid var(--line);
+			border-radius: 22px;
+			background: rgba(255, 255, 255, 0.98);
+			box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+			text-align: left;
+		}
+
+		/* Nút X dùng để đóng popup. */
+		.result-close {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			width: 34px;
+			height: 34px;
+			border: 0;
+			border-radius: 999px;
+			background: #f1f5f9;
+			color: #475569;
+			font-size: 22px;
+			line-height: 1;
+			cursor: pointer;
+		}
+
+		/* Chip nhỏ trong popup để báo loại kết quả. */
+		.result-chip {
+			display: inline-flex;
+			align-items: center;
+			padding: 5px 10px;
+			border-radius: 999px;
+			font-size: 11px;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+
+		/* Tiêu đề lớn trong popup kết quả. */
+		.result-title {
+			margin-top: 14px;
+			font-size: 24px;
+			font-weight: 800;
+			line-height: 1.2;
+		}
+
+		/* Nội dung mô tả chi tiết hơn trong popup. */
+		.result-text {
+			margin-top: 8px;
+			font-size: 14px;
+			line-height: 1.5;
+			color: var(--muted);
+		}
+
+		/* Màu cho popup thắng. */
+		.result-win .result-chip {
+			color: #b91c1c;
+			background: rgba(239, 68, 68, 0.12);
+		}
+
+		/* Màu cho popup thua. */
+		.result-loss .result-chip {
+			color: #0f766e;
+			background: rgba(15, 118, 110, 0.12);
+		}
+
+		/* Màu cho popup hòa. */
+		.result-draw .result-chip {
+			color: #2563eb;
+			background: rgba(37, 99, 235, 0.12);
+		}
+
+		/* Dòng ghi chú nhỏ ở cuối giao diện. */
+		.game-footer {
+			margin-top: 14px;
+			font-size: 13px;
+			color: var(--muted);
+			text-align: center;
+		}
+
+		/* Tối ưu giao diện trên màn hình nhỏ. */
+		@media (max-width: 480px) {
+			.game-shell {
+				padding: 20px;
+				border-radius: 22px;
+			}
+
+			h1 {
+				font-size: 28px;
+			}
+
+			.game-panel {
+				padding: 14px;
+			}
+		}
+	</style>
+
+	<!-- Nạp file JavaScript xử lý toàn bộ logic game. -->
+	<script src="tic-tac-toe.js" type="text/javascript" charset="utf-8"></script>
+
+	<!-- Khi trang load xong thì khởi tạo game. -->
+	<script type="text/javascript" charset="utf-8">
+		window.addEventListener('load', function () { new Game(); }, false);
+	</script>
+</head>
+<body>
+	<!-- Khung chính của ứng dụng tic-tac-toe. -->
+	<div class="game-shell">
+		<!-- Thanh trên cùng: nhãn AI Mode và nút reset. -->
+		<div class="game-topbar">
+			<div class="game-badge">AI Mode</div>
+
+			<!-- Nút reset game bằng icon. -->
+			<button id="reset-game" type="button" title="Reset game" aria-label="Reset game">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+					<path d="M21 3v6h-6"></path>
+				</svg>
+			</button>
+		</div>
+
+		<!-- Tiêu đề và mô tả ngắn của game. -->
+		<h1>Tic - tac - toe AI</h1>
+		<p class="game-subtitle">Bạn chơi quân X. AI chơi quân O. Chạm vào ô trống để bắt đầu.</p>
+
+		<!-- Khu vực chính chứa control độ khó, trạng thái và bàn cờ. -->
+		<div class="game-panel">
+			<div class="controls">
+				<div class="control-group">
+					<div class="status-label">Độ khó</div>
+
+					<!-- Chọn cấp độ khó của AI. -->
+					<select id="difficulty" class="control-select" aria-label="Chọn độ khó">
+						<option value="easy">Dễ</option>
+						<option value="medium" selected>Trung bình</option>
+						<option value="hard">Khó</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Khối hiển thị trạng thái hiện tại của ván. -->
+			<div class="status-label">Game Status</div>
+			<div id="game-status" class="status-playing" aria-live="polite">
+				<div class="status-chip">Đến lượt bạn</div>
+				<div class="status-title">Lượt của bạn</div>
+				<div class="status-text">Bạn đang đánh quân X. Hãy chọn một ô trống để bắt đầu ván mới.</div>
+			</div>
+
+			<!-- Khu vực bàn cờ 3x3, các ô sẽ được tạo bằng JavaScript. -->
+			<div id="board" class="board" aria-label="Tic tac toe board"></div>
+		</div>
+
+		<!-- Bảng thống kê kết quả sau các ván chơi. -->
+		<div class="stats" aria-label="Thống kê kết quả">
+			<div class="stat-card stat-win">
+				<span class="stat-label">Thắng</span>
+				<span id="stat-win" class="stat-value">0</span>
+			</div>
+			<div class="stat-card stat-loss">
+				<span class="stat-label">Thua</span>
+				<span id="stat-loss" class="stat-value">0</span>
+			</div>
+			<div class="stat-card stat-draw">
+				<span class="stat-label">Hòa</span>
+				<span id="stat-draw" class="stat-value">0</span>
+			</div>
+		</div>
+
+		<!-- Ghi chú nhỏ ở cuối màn hình. -->
+		<p class="game-footer">Nhấn icon ở góc phải để bắt đầu lại ván mới.</p>
+
+		<!-- Popup kết quả: mặc định ẩn, chỉ hiện khi ván kết thúc. -->
+		<div id="result-modal" class="result-modal" aria-hidden="true">
+			<div id="result-card" class="result-card">
+				<!-- Nút đóng popup kết quả. -->
+				<button id="result-close" class="result-close" type="button" aria-label="Đóng thông báo">×</button>
+
+				<!-- Các phần nội dung của popup sẽ được JavaScript cập nhật động. -->
+				<div id="result-chip" class="result-chip"></div>
+				<div id="result-title" class="result-title"></div>
+				<div id="result-text" class="result-text"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

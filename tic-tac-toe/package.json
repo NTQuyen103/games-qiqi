@@ -1,0 +1,14 @@
+{
+  "name": "tic-tac-toe",
+  "version": "1.0.0",
+  "description": "Simple Tic-Tac-Toe game using HTML, CSS, and JavaScript",
+  "main": "tic-tac-toe.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Quyên",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
