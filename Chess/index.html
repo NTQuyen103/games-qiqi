@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cờ vua Minimax AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-glow glow-1"></div>
+  <div class="page-glow glow-2"></div>
+
+  <div class="app-shell">
+    <div class="app">
+      <aside class="left-panel card">
+        <div class="brand-row">
+          <div class="brand">
+            <h1>Cờ vua Minimax AI</h1>
+          </div>
+          <button id="soundToggle" class="icon-btn" type="button" title="Bật / tắt âm thanh" aria-label="Bật / tắt âm thanh">🔊</button>
+        </div>
+
+        <div class="controls-grid">
+          <label>
+            Chế độ
+            <select id="modeSelect">
+              <option value="ai">Người vs Máy</option>
+              <option value="pvp">2 Người chơi</option>
+            </select>
+          </label>
+
+          <label>
+            Độ khó AI
+            <select id="difficultySelect">
+              <option value="2">Dễ</option>
+              <option value="3" selected>Vừa</option>
+              <option value="4">Khó</option>
+            </select>
+          </label>
+
+          <label>
+            Người chơi
+            <select id="playerColorSelect">
+              <option value="w">Trắng</option>
+              <option value="b">Đen</option>
+            </select>
+          </label>
+
+          <label>
+            Hướng bàn cờ
+            <select id="orientationSelect">
+              <option value="auto" selected>Tự động</option>
+              <option value="w">Nhìn từ Trắng</option>
+              <option value="b">Nhìn từ Đen</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button id="newGameBtn">Ván mới</button>
+          <button id="undoBtn">Đi lại</button>
+          <button id="flipBtn">Lật bàn cờ</button>
+        </div>
+
+        <div class="status-panel info-card">
+          <div class="info-title">Trạng thái trận đấu</div>
+          <div class="status-line"><span>Trạng thái</span><strong id="statusText">Đang khởi tạo...</strong></div>
+          <div class="status-line"><span>Lượt đi</span><strong id="turnText">-</strong></div>
+          <div class="status-line"><span>Nước gần nhất</span><strong id="lastMoveText">-</strong></div>
+        </div>
+      </aside>
+
+      <main class="board-panel card">
+        <div class="board-wrap">
+          <div id="board" class="board" aria-label="Bàn cờ vua"></div>
+        </div>
+      </main>
+
+      <aside class="right-panel card">
+        <div class="section-block">
+          <div class="section-title">Lịch sử nước đi</div>
+          <div id="moveHistory" class="move-history"></div>
+        </div>
+
+        <div class="section-block help-section">
+          <div class="section-title">Hướng dẫn nhanh</div>
+          <div class="help-box">
+            <p>• Bấm quân cờ rồi bấm ô đích để di chuyển.</p>
+            <p>• Tốt sẽ tự phong cấp lên hậu khi tới hàng cuối.</p>
+            <p>• Ở chế độ Người vs Máy, AI sẽ tự đi khi đến lượt.</p>
+            <p>• Có thể dùng phím <strong>Z</strong> để đi lại, <strong>R</strong> để bắt đầu ván mới.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <div id="resultModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-badge">Kết thúc ván đấu</div>
+      <h2 id="resultTitle">Ván cờ đã kết thúc</h2>
+      <p id="resultSubtitle">Chúc mừng người chiến thắng.</p>
+      <div class="modal-actions">
+        <button id="modalNewGameBtn" class="primary-btn" type="button">Chơi ván mới</button>
+        <button id="modalCloseBtn" type="button">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
