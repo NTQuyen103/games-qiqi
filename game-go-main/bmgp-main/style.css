@@ -5,7 +5,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background: radial-gradient(ellipse at bottom, #fcf5fe 0%, #967a8a 100%);
+  background: radial-gradient(ellipse at bottom, #f6e5fb 0%, #f5cee4 100%);
   overflow: hidden;
   color: white;
   font-family: 'Segoe UI', Arial, sans-serif;
