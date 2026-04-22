@@ -27,6 +27,17 @@
           <option value="computer" selected>Người vs. Máy</option>
           <option value="computer-computer">Máy vs. Máy</option>
         </select>
+        <select id="goDifficulty" aria-label="Chọn độ khó AI">
+          <option value="easy">AI dễ - đi nhanh</option>
+          <option value="medium" selected>AI vừa - cân bằng</option>
+          <option value="hard">AI khó - tính sâu</option>
+        </select>
+        <select id="boardTheme" aria-label="Chọn giao diện bàn cờ">
+          <option value="classic" selected>Theme gỗ cổ điển</option>
+          <option value="light">Theme sáng</option>
+          <option value="forest">Theme xanh rêu</option>
+          <option value="ocean">Theme xanh biển</option>
+        </select>
         <button id="startButton">Bắt đầu</button>
         <button id="autoLearnButton">Tự động học</button>
         <button id="cleanDuplicatesButton">Xóa dữ liệu trùng</button>
@@ -67,6 +78,25 @@
         </div>
       </div>
       <button id="backToSetupButton" style="margin-bottom:10px;">Quay lại</button>
+      <div id="game-options">
+        <label>
+          Màu bàn
+          <select id="gameBoardTheme" aria-label="Đổi màu bàn cờ">
+            <option value="classic" selected>Gỗ cổ điển</option>
+            <option value="light">Sáng</option>
+            <option value="forest">Xanh rêu</option>
+            <option value="ocean">Xanh biển</option>
+          </select>
+        </label>
+        <label>
+          Độ khó
+          <select id="gameDifficulty" aria-label="Đổi độ khó AI">
+            <option value="easy">Dễ</option>
+            <option value="medium" selected>Vừa</option>
+            <option value="hard">Khó</option>
+          </select>
+        </label>
+      </div>
       <div id="weights-display" style="display: none;">
         <h3>Trọng số Neural Network:</h3>
         <pre id="weights-content"></pre>
@@ -79,6 +109,29 @@
         </div>
       </div>
       <div id="score">Đen đi trước</div>
+    </div>
+  </div>
+
+  <div id="result-modal" class="result-modal" aria-hidden="true">
+    <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <button id="result-close" class="result-close" type="button" aria-label="Đóng">×</button>
+      <div id="result-chip" class="result-chip">Kết thúc</div>
+      <h2 id="result-title">Kết quả ván đấu</h2>
+      <p id="result-summary" class="result-summary"></p>
+      <div class="result-scores">
+        <div>
+          <span>Đen</span>
+          <strong id="result-black-score">0</strong>
+        </div>
+        <div>
+          <span>Trắng</span>
+          <strong id="result-white-score">0</strong>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button id="result-restart" type="button">Chơi lại</button>
+        <button id="result-setup" type="button">Về tùy chọn</button>
+      </div>
     </div>
   </div>
 

@@ -19,6 +19,21 @@ let bestMove = EMPTY;
 let userMove = 0;
 let cell;
 let gameMode = 'computer';
+let goDifficulty = 'medium';
+let aiSearchDepth = 4;
+let currentBoardTheme = 'classic';
+let searchRootDepth = 4;
+const difficultySettings = {
+    easy: { depth: 1, randomChance: 0.65, label: 'AI dễ' },
+    medium: { depth: 3, randomChance: 0.25, label: 'AI vừa' },
+    hard: { depth: 6, randomChance: 0, label: 'AI khó' }
+};
+const boardThemes = {
+    classic: { board: '#F4A460', border: '#8B4513', line: '#111111', hoshi: '#050505' },
+    light: { board: '#f6d89c', border: '#a16207', line: '#3f2d16', hoshi: '#33200f' },
+    forest: { board: '#b8a76f', border: '#4b5d2a', line: '#233313', hoshi: '#1f2d10' },
+    ocean: { board: '#8fc7d8', border: '#155e75', line: '#0f3443', hoshi: '#082f49' }
+};
 // Thêm biến để lưu lịch sử nước đi trong ván
 let moveHistory = [];
 
@@ -27,6 +42,10 @@ let canvas;
 let ctx;
 let selectSize;
 let gameModeSelect;
+let difficultySelect;
+let boardThemeSelect;
+let gameDifficultySelect;
+let gameBoardThemeSelect;
 let startButton;
 let moveList;
 let autoLearningStatus; // Thêm element hiển thị trạng thái
@@ -125,6 +144,93 @@ function createGoSoundPlayer() {
 
 const playGoSound = createGoSoundPlayer();
 
+function getDifficultyConfig() {
+    return difficultySettings[goDifficulty] || difficultySettings.medium;
+}
+
+function setGoDifficulty(value) {
+    goDifficulty = difficultySettings[value] ? value : 'medium';
+    aiSearchDepth = getDifficultyConfig().depth;
+    if (difficultySelect) {
+        difficultySelect.value = goDifficulty;
+    }
+    if (gameDifficultySelect) {
+        gameDifficultySelect.value = goDifficulty;
+    }
+}
+
+function applyBoardTheme(themeName) {
+    currentBoardTheme = boardThemes[themeName] ? themeName : 'classic';
+    if (boardThemeSelect) {
+        boardThemeSelect.value = currentBoardTheme;
+    }
+    if (gameBoardThemeSelect) {
+        gameBoardThemeSelect.value = currentBoardTheme;
+    }
+    document.body.classList.remove('theme-light', 'theme-forest', 'theme-ocean');
+    if (currentBoardTheme !== 'classic') {
+        document.body.classList.add(`theme-${currentBoardTheme}`);
+    }
+    if (canvas) {
+        const theme = boardThemes[currentBoardTheme];
+        canvas.style.borderColor = theme.border;
+        canvas.style.backgroundColor = theme.board;
+        drawBoard();
+    }
+}
+
+function resetGameView(options = {}) {
+    const setupContainer = document.getElementById('setup-container');
+    const gameContainer = document.getElementById('game-container');
+
+    if (typeof stopAutoLearning === 'function') stopAutoLearning();
+    if (typeof timerInterval !== 'undefined' && timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    if (typeof initBoard === 'function') initBoard();
+    if (typeof drawBoard === 'function') drawBoard();
+    if (typeof updateScore === 'function') updateScore();
+    if (typeof updatePlayerTimes === 'function') updatePlayerTimes();
+    if (typeof moveList !== 'undefined' && moveList) moveList.innerHTML = '';
+
+    if (options.showSetup && setupContainer && gameContainer) {
+        setupContainer.style.display = '';
+        gameContainer.style.display = 'none';
+    }
+}
+
+function showResultModal(finalScore) {
+    const modal = document.getElementById('result-modal');
+    const title = document.getElementById('result-title');
+    const chip = document.getElementById('result-chip');
+    const summary = document.getElementById('result-summary');
+    const blackScore = document.getElementById('result-black-score');
+    const whiteScore = document.getElementById('result-white-score');
+
+    if (!modal || !title || !chip || !summary || !blackScore || !whiteScore) {
+        return;
+    }
+
+    const winnerName = finalScore.winner === BLACK ? 'Đen' : 'Trắng';
+    chip.textContent = 'Kết thúc';
+    title.textContent = `${winnerName} thắng ván này`;
+    summary.textContent = `${winnerName} đang dẫn điểm sau khi tính lãnh thổ và komi. Bạn có thể chơi lại ngay hoặc quay về màn tùy chọn để đổi bàn, độ khó, theme.`;
+    blackScore.textContent = finalScore.black.toFixed(1);
+    whiteScore.textContent = finalScore.white.toFixed(1);
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function hideResultModal() {
+    const modal = document.getElementById('result-modal');
+    if (!modal) {
+        return;
+    }
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
 // Lấy các DOM element liên quan đến thời gian (nếu có)
 let player1Time, player2Time, player1Name, player2Name, timeModeRadios, turnTimeInput, totalTimeInput;
 
@@ -156,9 +262,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     selectSize = document.getElementById('size');
     gameModeSelect = document.getElementById('gameMode');
+    difficultySelect = document.getElementById('goDifficulty');
+    boardThemeSelect = document.getElementById('boardTheme');
+    gameDifficultySelect = document.getElementById('gameDifficulty');
+    gameBoardThemeSelect = document.getElementById('gameBoardTheme');
     startButton = document.getElementById('startButton');
     moveList = document.getElementById('moveList');
     autoLearningStatus = document.getElementById('auto-learning-status');
+    const resultCloseButton = document.getElementById('result-close');
+    const resultRestartButton = document.getElementById('result-restart');
+    const resultSetupButton = document.getElementById('result-setup');
+    const resultModal = document.getElementById('result-modal');
 
     // Thêm các elements mới
     const viewWeightsButton = document.getElementById('viewWeightsButton');
@@ -186,6 +300,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
+    if (difficultySelect) {
+        setGoDifficulty(difficultySelect.value);
+    }
+    if (boardThemeSelect) {
+        applyBoardTheme(boardThemeSelect.value);
+    }
+
     // Khởi tạo kích thước ô
     size = parseInt(selectSize.value);
     cell = canvas.width / size;
@@ -205,6 +326,60 @@ document.addEventListener('DOMContentLoaded', function() {
 gameModeSelect.addEventListener('change', function() {
     gameMode = gameModeSelect.value;
     });
+
+    if (difficultySelect) {
+        difficultySelect.addEventListener('change', function() {
+            setGoDifficulty(difficultySelect.value);
+            updateLearningStatus(`${getDifficultyConfig().label}: độ sâu ${aiSearchDepth}, ${goDifficulty === 'easy' ? 'nhiều nước ngẫu nhiên hơn' : goDifficulty === 'hard' ? 'ưu tiên tính sâu' : 'cân bằng giữa tốc độ và chiến thuật'}`);
+        });
+    }
+
+    if (gameDifficultySelect) {
+        gameDifficultySelect.addEventListener('change', function() {
+            setGoDifficulty(gameDifficultySelect.value);
+            updateLearningStatus(`${getDifficultyConfig().label}: độ sâu ${aiSearchDepth}, ${goDifficulty === 'easy' ? 'nhiều nước ngẫu nhiên hơn' : goDifficulty === 'hard' ? 'ưu tiên tính sâu' : 'cân bằng giữa tốc độ và chiến thuật'}`);
+        });
+    }
+
+    if (boardThemeSelect) {
+        boardThemeSelect.addEventListener('change', function() {
+            applyBoardTheme(boardThemeSelect.value);
+        });
+    }
+
+    if (gameBoardThemeSelect) {
+        gameBoardThemeSelect.addEventListener('change', function() {
+            applyBoardTheme(gameBoardThemeSelect.value);
+        });
+    }
+
+    if (resultCloseButton) {
+        resultCloseButton.addEventListener('click', hideResultModal);
+    }
+    if (resultModal) {
+        resultModal.addEventListener('click', function(event) {
+            if (event.target === resultModal) {
+                hideResultModal();
+            }
+        });
+    }
+    if (resultRestartButton) {
+        resultRestartButton.addEventListener('click', function() {
+            hideResultModal();
+            playGoSound('start');
+            autoRestartGame();
+            if (gameMode !== 'computer-computer') {
+                startTimer();
+            }
+        });
+    }
+    if (resultSetupButton) {
+        resultSetupButton.addEventListener('click', function() {
+            hideResultModal();
+            playGoSound('reset');
+            resetGameView({ showSetup: true });
+        });
+    }
 
     // Xử lý nút Xem trọng số
     if (viewWeightsButton) {
@@ -371,6 +546,13 @@ gameModeSelect.addEventListener('change', function() {
     }
 
     startButton.addEventListener('click', function() {
+        hideResultModal();
+        if (difficultySelect) {
+            setGoDifficulty(difficultySelect.value);
+        }
+        if (boardThemeSelect) {
+            applyBoardTheme(boardThemeSelect.value);
+        }
         playGoSound('start');
         // Ẩn setup-container, hiện game-container
         if (setupContainer && gameContainer) {
@@ -440,6 +622,10 @@ gameModeSelect.addEventListener('change', function() {
     const autoLearnButton = document.getElementById('autoLearnButton');
     if (autoLearnButton) {
         autoLearnButton.addEventListener('click', function() {
+            hideResultModal();
+            if (difficultySelect) {
+                setGoDifficulty(difficultySelect.value);
+            }
             playGoSound('start');
             // Đảm bảo tính năng tự động bắt đầu lại được bật
             AUTO_RESTART = true;
@@ -529,6 +715,7 @@ gameModeSelect.addEventListener('change', function() {
     const backToSetupButton = document.getElementById('backToSetupButton');
     if (backToSetupButton) {
         backToSetupButton.addEventListener('click', function() {
+            hideResultModal();
             playGoSound('reset');
             if (setupContainer && gameContainer) {
                 setupContainer.style.display = '';
@@ -546,16 +733,17 @@ gameModeSelect.addEventListener('change', function() {
 
 // GUI
 function drawBoard() {
+    const theme = boardThemes[currentBoardTheme] || boardThemes.classic;
     // Tính lại kích thước ô
     cell = canvas.width / size;
     // Xóa bàn cờ cũ
   ctx.clearRect(0, 0, canvas.width, canvas.height);
     // Vẽ nền bàn cờ
-    ctx.fillStyle = "#F4A460";
+    ctx.fillStyle = theme.board;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     // Vẽ lưới
   ctx.beginPath();
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = theme.line;
     ctx.lineWidth = 1;
     // Vẽ các đường ngang
     for (let i = 0; i < size; i++) {
@@ -577,7 +765,7 @@ function drawBoard() {
         const y = point.y * cell + cell / 2;
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = "black";
+        ctx.fillStyle = theme.hoshi;
         ctx.fill();
     }
 
@@ -683,7 +871,7 @@ function userInput(event) {
   if (gameMode === 'computer') {
         side = 3 - side;
     setTimeout(function() { 
-        play(6); 
+        play(aiSearchDepth); 
         // Thêm dòng này để chuyển lượt về người chơi sau khi máy đi xong
         side = 3 - side;
         // Cập nhật giao diện
@@ -790,6 +978,7 @@ function initBoard() {
     points_side = [];
     points_count = [];
     moveHistory = []; // Reset lịch sử nước đi
+    gameEnded = false;
 }
 
 function inEye(sq) { /* Check if square is in diamond shape */
@@ -1006,7 +1195,7 @@ function search(depth) {
     }
 
     // Chỉ cập nhật bestMove ở cấp độ cao nhất
-    if (depth === 6 && bestMoveAtCurrentDepth !== EMPTY) {
+    if (depth === searchRootDepth && bestMoveAtCurrentDepth !== EMPTY) {
         bestMove = bestMoveAtCurrentDepth;
     }
 
@@ -1133,8 +1322,11 @@ function calculateBoardSimilarity(board1, board2) {
 function play(depth) {
     if (gameEnded) return false;
 
+    const difficultyConfig = getDifficultyConfig();
+    depth = depth || difficultyConfig.depth;
+    searchRootDepth = depth;
     let currentScore = 0;
-    let bestMove = EMPTY;
+    bestMove = EMPTY;
     
     console.log('Debug - Bắt đầu lượt đi của máy:');
     console.log('Bên đang đi:', side === BLACK ? 'Đen' : 'Trắng');
@@ -1166,6 +1358,20 @@ function play(depth) {
     }
     
     // Nếu không dùng được nước đi từ training, dùng thuật toán tìm kiếm
+    if (!useTrainingMove && Math.random() < difficultyConfig.randomChance) {
+        console.log(`${difficultyConfig.label}: chọn nước đi ngẫu nhiên để giảm độ khó`);
+        let randomMoves = [];
+        for (let i = 0; i < size * size; i++) {
+            if (board[i] === EMPTY) {
+                randomMoves.push(i);
+            }
+        }
+        if (randomMoves.length > 0) {
+            bestMove = randomMoves[Math.floor(Math.random() * randomMoves.length)];
+            useTrainingMove = true;
+        }
+    }
+
     if (!useTrainingMove) {
         console.log("Dùng thuật toán tìm kiếm");
         updateLearningStatus("AI đang tính toán nước đi tốt nhất");
@@ -1339,40 +1545,10 @@ function endGame() {
     const finalScore = calculateScore();
     
     // Hiển thị kết quả
-    let resultMessage = `Kết thúc ván đấu!\n`;
-    resultMessage += `Đen: ${finalScore.black.toFixed(1)} điểm\n`;
-    resultMessage += `Trắng: ${finalScore.white.toFixed(1)} điểm\n`;
-    resultMessage += `Người thắng: ${finalScore.winner === BLACK ? 'Đen' : 'Trắng'}`;
-    alert(resultMessage);
+    showResultModal(finalScore);
 
     // Cập nhật giao diện điểm số
     updateScore();
-
-    // Sau khi hiện kết quả, hỏi người dùng muốn quay về trang tùy chọn không
-    setTimeout(function() {
-        if (confirm('Bạn có muốn quay về trang tùy chọn không?')) {
-            // Ẩn game-container, hiện setup-container
-            const setupContainer = document.getElementById('setup-container');
-            const gameContainer = document.getElementById('game-container');
-            if (setupContainer && gameContainer) {
-                setupContainer.style.display = '';
-                gameContainer.style.display = 'none';
-            }
-            // Reset bàn cờ
-            if (typeof stopAutoLearning === 'function') stopAutoLearning();
-            if (typeof timerInterval !== 'undefined' && timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
-            if (typeof initBoard === 'function') initBoard();
-            if (typeof drawBoard === 'function') drawBoard();
-            if (typeof updateScore === 'function') updateScore();
-            if (typeof updatePlayerTimes === 'function') updatePlayerTimes();
-            if (typeof moveList !== 'undefined' && moveList) moveList.innerHTML = '';
-        } else {
-            // Nếu không, có thể tự động chơi lại hoặc không làm gì
-        }
-    }, 200);
 
     // Nếu đang trong chế độ tự động học
     if (isAutoLearning) {
@@ -1498,6 +1674,8 @@ function tryAutoImportData() {
 
 // Hàm để tự động khởi động lại trò chơi
 function autoRestartGame() {
+    hideResultModal();
+    aiSearchDepth = getDifficultyConfig().depth;
     // Reset các biến trạng thái
     isAutoLearning = false;
     moveCounter = 0;
@@ -1559,7 +1737,7 @@ function startComputerVsComputer() {
         console.log('Debug - Chuẩn bị lượt đi mới:');
         console.log('Bên đang đi:', side === BLACK ? 'Đen' : 'Trắng');
         
-        if (!play(6)) {
+        if (!play(aiSearchDepth)) {
             console.log('Không thể thực hiện nước đi, kết thúc game');
             clearInterval(gameInterval);
             endGame();
