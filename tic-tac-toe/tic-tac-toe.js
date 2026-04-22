@@ -66,6 +66,68 @@ function Game() {
 		// theo đúng phong cách code gốc.
 		undef;
 
+	function createSoundPlayer() {
+		var AudioContext = window.AudioContext || window.webkitAudioContext;
+		var audioCtx;
+
+		function getContext() {
+			if (!AudioContext) {
+				return null;
+			}
+			if (!audioCtx) {
+				audioCtx = new AudioContext();
+			}
+			if (audioCtx.state === 'suspended') {
+				audioCtx.resume();
+			}
+			return audioCtx;
+		}
+
+		function tone(frequency, start, duration, type, gainValue) {
+			var ctx = getContext();
+			var oscillator, gain;
+
+			if (!ctx) {
+				return;
+			}
+
+			oscillator = ctx.createOscillator();
+			gain = ctx.createGain();
+			oscillator.type = type || 'sine';
+			oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + start);
+			gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+			gain.gain.exponentialRampToValueAtTime(gainValue || 0.08, ctx.currentTime + start + 0.01);
+			gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+			oscillator.connect(gain);
+			gain.connect(ctx.destination);
+			oscillator.start(ctx.currentTime + start);
+			oscillator.stop(ctx.currentTime + start + duration + 0.02);
+		}
+
+		return function playSound(name) {
+			if (name === 'human') {
+				tone(520, 0, 0.08, 'triangle', 0.07);
+			} else if (name === 'ai') {
+				tone(330, 0, 0.09, 'sine', 0.07);
+			} else if (name === 'win') {
+				tone(523, 0, 0.1, 'triangle', 0.08);
+				tone(659, 0.08, 0.1, 'triangle', 0.08);
+				tone(784, 0.16, 0.16, 'triangle', 0.08);
+			} else if (name === 'loss') {
+				tone(392, 0, 0.12, 'sawtooth', 0.05);
+				tone(294, 0.12, 0.16, 'sawtooth', 0.05);
+			} else if (name === 'draw') {
+				tone(440, 0, 0.08, 'sine', 0.06);
+				tone(440, 0.1, 0.08, 'sine', 0.06);
+			} else if (name === 'reset') {
+				tone(620, 0, 0.06, 'square', 0.04);
+				tone(480, 0.07, 0.08, 'square', 0.04);
+			}
+		};
+	}
+
+	var playSound = createSoundPlayer();
+
 	// Tạo 9 ô cờ trên giao diện ngay từ đầu.
 	createBoard();
 
@@ -77,7 +139,10 @@ function Game() {
 
 	// Khi bấm nút reset thì bắt đầu lại ván mới.
 	if (resetButton) {
-		resetButton.onclick = resetGame;
+		resetButton.onclick = function () {
+			playSound('reset');
+			resetGame();
+		};
 	}
 
 	// Khi bấm nút đóng trên popup kết quả thì ẩn popup đi.
@@ -198,6 +263,7 @@ function Game() {
 
 		// Sau khi một ô đã được đánh thì không cho click lại nữa.
 		cells[index].disabled = true;
+		playSound(player === human ? 'human' : 'ai');
 	}
 
 	function chk(depth) {
@@ -416,12 +482,15 @@ function Game() {
 		// Hiển thị trạng thái trong khung chính
 		// và đồng thời bật popup kết quả.
 		if (result === 'win') {
+			playSound('win');
 			setStatus('playing', 'Ván đấu kết thúc', 'Bạn đã thắng', 'Bạn đã tạo được ba ô liên tiếp trước AI.');
 			showResultModal('win', 'Chiến thắng', 'Bạn đã thắng ván này', 'Bạn đã tạo được ba ô liên tiếp trước AI. Nhấn reset để bắt đầu ván mới.');
 		} else if (result === 'loss') {
+			playSound('loss');
 			setStatus('playing', 'Ván đấu kết thúc', 'AI đã thắng', 'AI đã hoàn thành một hàng trước bạn.');
 			showResultModal('loss', 'Thất bại', 'AI đã thắng ván này', 'AI đã hoàn thành một hàng trước bạn. Hãy thử lại hoặc đổi độ khó để tiếp tục.');
 		} else {
+			playSound('draw');
 			setStatus('playing', 'Ván đấu kết thúc', 'Kết quả hòa', 'Không bên nào tạo được ba ô liên tiếp.');
 			showResultModal('draw', 'Hòa', 'Ván đấu kết thúc hòa', 'Không bên nào tạo được ba ô liên tiếp. Nhấn reset để chơi thêm một ván mới.');
 		}

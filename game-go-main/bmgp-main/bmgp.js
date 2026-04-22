@@ -61,6 +61,70 @@ let playerNames = ['-', 'Đen', 'Trắng'];
 let playerScores = [0, 0, 0]; // [unused, black, white]
 let gameEnded = false;
 
+function createGoSoundPlayer() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function getContext() {
+        if (!AudioContext) {
+            return null;
+        }
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function tone(frequency, start, duration, type = 'sine', gainValue = 0.07) {
+        const ctx = getContext();
+        let oscillator;
+        let gain;
+
+        if (!ctx) {
+            return;
+        }
+
+        oscillator = ctx.createOscillator();
+        gain = ctx.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, ctx.currentTime + start);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(gainValue, ctx.currentTime + start + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + duration);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(ctx.currentTime + start);
+        oscillator.stop(ctx.currentTime + start + duration + 0.02);
+    }
+
+    return function playGoSound(name) {
+        if (name === 'black') {
+            tone(220, 0, 0.08, 'triangle', 0.09);
+            tone(110, 0.01, 0.08, 'sine', 0.05);
+        } else if (name === 'white') {
+            tone(360, 0, 0.08, 'triangle', 0.08);
+            tone(180, 0.01, 0.08, 'sine', 0.04);
+        } else if (name === 'invalid') {
+            tone(150, 0, 0.12, 'sawtooth', 0.05);
+        } else if (name === 'start') {
+            tone(440, 0, 0.08, 'triangle', 0.06);
+            tone(660, 0.08, 0.1, 'triangle', 0.06);
+        } else if (name === 'end') {
+            tone(523, 0, 0.11, 'triangle', 0.07);
+            tone(659, 0.1, 0.11, 'triangle', 0.07);
+            tone(784, 0.2, 0.18, 'triangle', 0.07);
+        } else if (name === 'reset') {
+            tone(520, 0, 0.06, 'square', 0.04);
+            tone(390, 0.07, 0.08, 'square', 0.04);
+        }
+    };
+}
+
+const playGoSound = createGoSoundPlayer();
+
 // Lấy các DOM element liên quan đến thời gian (nếu có)
 let player1Time, player2Time, player1Name, player2Name, timeModeRadios, turnTimeInput, totalTimeInput;
 
@@ -307,6 +371,7 @@ gameModeSelect.addEventListener('change', function() {
     }
 
     startButton.addEventListener('click', function() {
+        playGoSound('start');
         // Ẩn setup-container, hiện game-container
         if (setupContainer && gameContainer) {
             setupContainer.style.display = 'none';
@@ -375,6 +440,7 @@ gameModeSelect.addEventListener('change', function() {
     const autoLearnButton = document.getElementById('autoLearnButton');
     if (autoLearnButton) {
         autoLearnButton.addEventListener('click', function() {
+            playGoSound('start');
             // Đảm bảo tính năng tự động bắt đầu lại được bật
             AUTO_RESTART = true;
             if (autoRestartCheckbox) {
@@ -463,6 +529,7 @@ gameModeSelect.addEventListener('change', function() {
     const backToSetupButton = document.getElementById('backToSetupButton');
     if (backToSetupButton) {
         backToSetupButton.addEventListener('click', function() {
+            playGoSound('reset');
             if (setupContainer && gameContainer) {
                 setupContainer.style.display = '';
                 gameContainer.style.display = 'none';
@@ -590,8 +657,8 @@ function userInput(event) {
   // Chỉ cho phép người chơi đi nếu đúng lượt (chế độ người vs máy)
   if (gameMode === 'computer' && side !== BLACK) return;
   let rect = canvas.getBoundingClientRect();
-  let mouseX = event.clientX - rect.left;
-  let mouseY = event.clientY - rect.top;
+  let mouseX = (event.clientX - rect.left) * (canvas.width / rect.width);
+  let mouseY = (event.clientY - rect.top) * (canvas.height / rect.height);
   let col = Math.floor(mouseX / cell);
   let row = Math.floor(mouseY / cell);
     // Kiểm tra biên
@@ -602,10 +669,15 @@ function userInput(event) {
   // Lấy danh sách nước đi hợp lệ
   const validMoves = getValidMoves();
   if (!validMoves.includes(sq)) {
+    playGoSound('invalid');
     alert('Bạn phải đi vào một ô hợp lệ (không phải Ko, không tự sát, không trùng)!');
     return;
   }
-  if (!setStone(sq, side, true)) return;
+  if (!setStone(sq, side, true)) {
+    playGoSound('invalid');
+    return;
+  }
+  playGoSound(side === BLACK ? 'black' : 'white');
   drawBoard();
   addToHistory(sq, side);
   if (gameMode === 'computer') {
@@ -1178,6 +1250,7 @@ function play(depth) {
     }
 
     // Cập nhật giao diện và lịch sử
+    playGoSound(side === BLACK ? 'black' : 'white');
     drawBoard();
     addToHistory(bestMove, side);
     updateScore();
@@ -1255,6 +1328,7 @@ function addToHistory(sq, side) {
 function endGame() {
     if (gameEnded) return;
     gameEnded = true;
+    playGoSound('end');
 
     if (timerInterval) {
         clearInterval(timerInterval);

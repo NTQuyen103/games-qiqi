@@ -1,12 +1,13 @@
 body {
   margin: 0;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   background: radial-gradient(ellipse at bottom, #f6e5fb 0%, #f5cee4 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   color: white;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
@@ -33,10 +34,11 @@ body {
 		}
 
 #container {
-  margin-top: 60px;
+  margin-top: 24px;
   text-align: center;
-  width: 100vw;
+  width: min(100%, 1200px);
   max-width: 1200px;
+  padding: 0 16px 24px;
 }
 
 #setup-container {
@@ -98,23 +100,31 @@ body {
 }
 
 #game-container {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: minmax(130px, 170px) minmax(0, auto);
+  grid-template-areas:
+    "back back"
+    "players board"
+    "score score";
   align-items: flex-start;
   justify-content: center;
-  margin-top: 30px;
-  width: 100%;
-  gap: 40px;
+  margin: 8px auto 0;
+  width: min(100%, calc(100vw - 32px));
+  gap: 10px 24px;
 }
 
 #game-board-area {
+  grid-area: board;
   display: flex;
   flex-direction: row;
   align-items: center;
+  gap: 16px;
   background: rgba(30, 42, 58, 0.98);
   border-radius: 18px;
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  padding: 24px 24px 16px 24px;
+  padding: clamp(12px, 2vw, 24px);
+  max-width: 100%;
+  overflow: hidden;
 }
 
 #gobang {
@@ -122,12 +132,17 @@ body {
   background-color: #F4A460;
   box-shadow: 0 0 32px 0 rgba(0,0,0,0.4);
   border-radius: 12px;
-  margin-bottom: 18px;
+  display: block;
+  width: min(500px, calc(100vw - 380px));
+  height: auto;
+  margin-bottom: 0;
 }
 
 #history {
+  flex: 0 0 220px;
   width: 220px;
-  height: 420px;
+  height: min(420px, calc(100vh - 270px));
+  min-height: 220px;
   border-radius: 12px;
   border: 1.5px solid #2c3e50;
   margin-top: 0;
@@ -146,7 +161,8 @@ body {
 }
 
 #score {
-  margin: 36px auto 0 auto;
+  grid-area: score;
+  margin: 0 auto;
   font-size: 20px;
   font-weight: bold;
   color: #FFD700;
@@ -157,7 +173,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
   text-align: center;
   min-width: 320px;
-  max-width: 600px;
+  max-width: min(600px, 100%);
 }
 
 #players-info {
@@ -175,9 +191,9 @@ body {
 }
 
 #backToSetupButton {
-  position: absolute;
-  left: 30px;
-  top: 30px;
+  grid-area: back;
+  justify-self: start;
+  position: static;
   z-index: 10;
   padding: 10px 22px;
   font-size: 16px;
@@ -208,18 +224,17 @@ body {
 
 @media screen and (max-width: 900px) {
   #game-container {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "back"
+      "players"
+      "board"
+      "score";
     align-items: center;
     gap: 20px;
   }
   #game-board-area {
     margin-bottom: 20px;
-  }
-  #backToSetupButton {
-    position: static;
-    margin-bottom: 10px;
-    left: unset;
-    top: unset;
   }
 }
 
@@ -258,13 +273,7 @@ body {
 
 @media screen and (min-width: 768px) {
   #game-container {
-    flex-direction: row;
     align-items: flex-start;
-  }
-
-  #history {
-    margin-left: 20px;
-    margin-top: 0;
   }
 }
 
@@ -330,11 +339,12 @@ body {
 
 /* --- PLAYER PANEL --- */
 #players-panel {
+  grid-area: players;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 36px;
-  margin-right: 36px;
+  margin-right: 0;
 }
 .player-card {
   background: rgba(30, 42, 58, 0.98);
@@ -406,3 +416,69 @@ body {
 
 /* --- END PLAYER PANEL --- */
 
+@media screen and (max-width: 900px) {
+  #players-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  #gobang {
+    width: min(500px, calc(100vw - 88px));
+  }
+}
+
+@media screen and (max-width: 720px) {
+  #container {
+    margin-top: 64px;
+  }
+
+  #game-board-area {
+    flex-direction: column;
+  }
+
+  #history {
+    flex-basis: auto;
+    width: min(100%, 500px);
+    height: 150px;
+    min-height: 150px;
+  }
+
+  #score {
+    min-width: 0;
+    width: 100%;
+    font-size: 18px;
+    padding: 14px 18px;
+  }
+}
+
+@media screen and (max-width: 520px) {
+  #go-home {
+    top: 12px;
+    left: 12px;
+  }
+
+  #setup-container {
+    padding: 24px 18px 18px;
+  }
+
+  #controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #controls select,
+  #controls button,
+  #controls input[type="number"],
+  #controls label {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  #gobang {
+    border-width: 8px;
+    width: min(500px, calc(100vw - 64px));
+  }
+}
