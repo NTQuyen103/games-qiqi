@@ -106,22 +106,22 @@ function Game() {
 
 		return function playSound(name) {
 			if (name === 'human') {
-				tone(520, 0, 0.08, 'triangle', 0.07);
+				tone(520, 0, 0.08, 'triangle', 0.16);
 			} else if (name === 'ai') {
-				tone(330, 0, 0.09, 'sine', 0.07);
+				tone(330, 0, 0.09, 'sine', 0.16);
 			} else if (name === 'win') {
-				tone(523, 0, 0.1, 'triangle', 0.08);
-				tone(659, 0.08, 0.1, 'triangle', 0.08);
-				tone(784, 0.16, 0.16, 'triangle', 0.08);
+				tone(523, 0, 0.1, 'triangle', 0.18);
+				tone(659, 0.08, 0.1, 'triangle', 0.18);
+				tone(784, 0.16, 0.16, 'triangle', 0.18);
 			} else if (name === 'loss') {
-				tone(392, 0, 0.12, 'sawtooth', 0.05);
-				tone(294, 0.12, 0.16, 'sawtooth', 0.05);
+				tone(392, 0, 0.12, 'sawtooth', 0.12);
+				tone(294, 0.12, 0.16, 'sawtooth', 0.12);
 			} else if (name === 'draw') {
-				tone(440, 0, 0.08, 'sine', 0.06);
-				tone(440, 0.1, 0.08, 'sine', 0.06);
+				tone(440, 0, 0.08, 'sine', 0.14);
+				tone(440, 0.1, 0.08, 'sine', 0.14);
 			} else if (name === 'reset') {
-				tone(620, 0, 0.06, 'square', 0.04);
-				tone(480, 0.07, 0.08, 'square', 0.04);
+				tone(620, 0, 0.06, 'square', 0.1);
+				tone(480, 0.07, 0.08, 'square', 0.1);
 			}
 		};
 	}

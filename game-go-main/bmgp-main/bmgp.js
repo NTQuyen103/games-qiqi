@@ -102,23 +102,23 @@ function createGoSoundPlayer() {
 
     return function playGoSound(name) {
         if (name === 'black') {
-            tone(220, 0, 0.08, 'triangle', 0.09);
-            tone(110, 0.01, 0.08, 'sine', 0.05);
+            tone(220, 0, 0.08, 'triangle', 0.18);
+            tone(110, 0.01, 0.08, 'sine', 0.1);
         } else if (name === 'white') {
-            tone(360, 0, 0.08, 'triangle', 0.08);
-            tone(180, 0.01, 0.08, 'sine', 0.04);
+            tone(360, 0, 0.08, 'triangle', 0.17);
+            tone(180, 0.01, 0.08, 'sine', 0.09);
         } else if (name === 'invalid') {
-            tone(150, 0, 0.12, 'sawtooth', 0.05);
+            tone(150, 0, 0.12, 'sawtooth', 0.12);
         } else if (name === 'start') {
-            tone(440, 0, 0.08, 'triangle', 0.06);
-            tone(660, 0.08, 0.1, 'triangle', 0.06);
+            tone(440, 0, 0.08, 'triangle', 0.14);
+            tone(660, 0.08, 0.1, 'triangle', 0.14);
         } else if (name === 'end') {
-            tone(523, 0, 0.11, 'triangle', 0.07);
-            tone(659, 0.1, 0.11, 'triangle', 0.07);
-            tone(784, 0.2, 0.18, 'triangle', 0.07);
+            tone(523, 0, 0.11, 'triangle', 0.16);
+            tone(659, 0.1, 0.11, 'triangle', 0.16);
+            tone(784, 0.2, 0.18, 'triangle', 0.16);
         } else if (name === 'reset') {
-            tone(520, 0, 0.06, 'square', 0.04);
-            tone(390, 0.07, 0.08, 'square', 0.04);
+            tone(520, 0, 0.06, 'square', 0.1);
+            tone(390, 0.07, 0.08, 'square', 0.1);
         }
     };
 }
